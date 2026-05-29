@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowDown } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
@@ -8,7 +8,7 @@ import { FilterPanel } from "@/components/MoodFilters";
 import { RandomPicker } from "@/components/RandomPicker";
 import { PRICE_MIN, PRICE_MAX, type Mood, type Area, type Restaurant } from "@/data/restaurants";
 import { getRestaurants } from "@/api/restaurants";
-import { useLocation, getDistance } from "@/hooks/use-location";
+import { useLocation, getDistance, getRealDistances } from "@/hooks/use-location";
 
 export const Route = createFileRoute("/")({
   loader: () => getRestaurants(),
@@ -29,7 +29,15 @@ function Home() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN, PRICE_MAX]);
   const [pickerOpen, setPickerOpen] = useState(false);
+  
   const { lat, lng, loading: locLoading } = useLocation();
+  const [realDistances, setRealDistances] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (lat !== null && lng !== null && initialRestaurants.length > 0) {
+      getRealDistances(lat, lng, initialRestaurants).then(setRealDistances);
+    }
+  }, [lat, lng, initialRestaurants]);
 
   const toggleMood = (m: Mood) =>
     setMoods((s) => (s.includes(m) ? s.filter((x) => x !== m) : [...s, m]));
@@ -63,14 +71,17 @@ function Home() {
     if (lat !== null && lng !== null) {
       return results
         .map((r) => {
-          const dist = getDistance(lat, lng, r.lat, r.lng);
+          // Use real driving distance if available, fallback to Haversine straight-line
+          const dist = realDistances[r.id] !== undefined 
+            ? realDistances[r.id] 
+            : getDistance(lat, lng, r.lat, r.lng);
           return { ...r, calculatedDistance: dist };
         })
         .sort((a, b) => a.calculatedDistance - b.calculatedDistance);
     }
 
     return results;
-  }, [initialRestaurants, moods, areas, priceRange, lat, lng]);
+  }, [initialRestaurants, moods, areas, priceRange, lat, lng, realDistances]);
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -145,7 +156,6 @@ function Home() {
           />
         </div>
 
-        {/* Loading placeholder when SSR didn't complete or no location yet and we want to wait, though we can just render anyway */}
         {filteredAndSorted.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-border bg-card/40 p-12 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">

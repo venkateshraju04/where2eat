@@ -46,7 +46,10 @@ export function RandomPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
   
-  const getDistStr = (r: Restaurant) => {
+  const getDistStr = (r: Restaurant & { calculatedDistance?: number }) => {
+    if (r.calculatedDistance !== undefined) {
+      return `${r.calculatedDistance.toFixed(1)} km`;
+    }
     if (lat && lng) {
       return `${getDistance(lat, lng, r.lat, r.lng).toFixed(1)} km`;
     }
