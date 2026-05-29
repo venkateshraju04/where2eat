@@ -1,4 +1,4 @@
-import { MOODS, PRICE_MIN, PRICE_MAX, type Mood } from "@/data/restaurants";
+import { MOODS, AREAS, PRICE_MIN, PRICE_MAX, type Mood, type Area } from "@/data/restaurants";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
 import { SlidersHorizontal, X } from "lucide-react";
@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 interface FilterPanelProps {
   activeMoods: Mood[];
   onToggleMood: (m: Mood) => void;
+  activeAreas: Area[];
+  onToggleArea: (a: Area) => void;
   priceRange: [number, number];
   onPriceChange: (range: [number, number]) => void;
   onClear: () => void;
@@ -16,6 +18,8 @@ interface FilterPanelProps {
 export function FilterPanel({
   activeMoods,
   onToggleMood,
+  activeAreas,
+  onToggleArea,
   priceRange,
   onPriceChange,
   onClear,
@@ -40,10 +44,10 @@ export function FilterPanel({
       <PopoverContent
         align="start"
         sideOffset={8}
-        className="w-80 rounded-2xl border-border bg-card p-0 shadow-glow"
+        className="w-80 rounded-2xl border-border bg-card p-0 shadow-glow h-[400px] flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+        <div className="flex-none flex items-center justify-between border-b border-border px-5 py-4">
           <h3 className="text-sm font-semibold">Filters</h3>
           {activeCount > 0 && (
             <button
@@ -56,7 +60,33 @@ export function FilterPanel({
           )}
         </div>
 
-        <div className="space-y-5 p-5">
+        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+          {/* Areas */}
+          <div>
+            <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Areas
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {AREAS.map((a) => {
+                const isActive = activeAreas.includes(a);
+                return (
+                  <motion.button
+                    key={a}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => onToggleArea(a)}
+                    className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-smooth ${
+                      isActive
+                        ? "border-transparent bg-gradient-primary text-primary-foreground shadow-soft"
+                        : "border-border bg-secondary/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    }`}
+                  >
+                    {a}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Categories */}
           <div>
             <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">

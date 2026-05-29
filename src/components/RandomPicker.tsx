@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, MapPin, Star, RotateCcw, Navigation } from "lucide-react";
 import type { Restaurant } from "@/data/restaurants";
+import { useLocation, getDistance } from "@/hooks/use-location";
 
 export function RandomPicker({
   open,
@@ -15,6 +16,7 @@ export function RandomPicker({
   const [phase, setPhase] = useState<"spin" | "reveal">("spin");
   const [current, setCurrent] = useState<Restaurant | null>(null);
   const [picked, setPicked] = useState<Restaurant | null>(null);
+  const { lat, lng } = useLocation();
 
   const spin = () => {
     if (!pool.length) return;
@@ -43,6 +45,13 @@ export function RandomPicker({
     if (open) spin();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+  
+  const getDistStr = (r: Restaurant) => {
+    if (lat && lng) {
+      return `${getDistance(lat, lng, r.lat, r.lng).toFixed(1)} km`;
+    }
+    return r.area;
+  };
 
   return (
     <AnimatePresence>
@@ -77,7 +86,7 @@ export function RandomPicker({
                   </p>
                   <div className="relative overflow-hidden rounded-3xl shadow-glow">
                     <img
-                      src={current.image}
+                      src={current.image_url}
                       alt=""
                       className="aspect-[4/3] w-full object-cover blur-[2px]"
                     />
@@ -113,17 +122,22 @@ export function RandomPicker({
                     className="overflow-hidden rounded-3xl bg-gradient-card shadow-glow"
                   >
                     <div className="relative aspect-[4/3]">
-                      <img src={picked.image} alt={picked.name} className="h-full w-full object-cover" />
+                      <img src={picked.image_url} alt={picked.name} className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
                       <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full glass px-3 py-1.5 text-sm font-semibold">
                         <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                        {picked.rating}
+                        {picked.rating || "New"}
                       </div>
                     </div>
                     <div className="space-y-4 p-6">
-                      <div>
-                        <h2 className="text-3xl font-bold leading-tight">{picked.name}</h2>
-                        <p className="mt-1 text-sm uppercase tracking-wider text-primary">{picked.cuisine}</p>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h2 className="text-3xl font-bold leading-tight">{picked.name}</h2>
+                          <p className="mt-1 text-sm uppercase tracking-wider text-primary">{picked.cuisine}</p>
+                        </div>
+                        <div className="text-xs font-medium bg-secondary/50 px-2 py-1 rounded-md shrink-0">
+                          ₹{picked.price}
+                        </div>
                       </div>
                       <p className="text-sm text-muted-foreground">{picked.description}</p>
                       <div className="flex flex-wrap gap-1.5">
@@ -134,11 +148,11 @@ export function RandomPicker({
                         ))}
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5" /> {picked.distance} away
+                        <MapPin className="h-3.5 w-3.5" /> {getDistStr(picked)}
                       </div>
                       <div className="grid grid-cols-2 gap-2 pt-1">
                         <a
-                          href={`https://www.google.com/maps/search/${encodeURIComponent(picked.name)}`}
+                          href={picked.google_maps_url || `https://www.google.com/maps/search/${encodeURIComponent(picked.name + " " + picked.area)}`}
                           target="_blank"
                           rel="noreferrer"
                           className="flex items-center justify-center gap-2 rounded-full bg-gradient-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-soft transition-smooth hover:shadow-glow"
@@ -163,3 +177,4 @@ export function RandomPicker({
     </AnimatePresence>
   );
 }
+

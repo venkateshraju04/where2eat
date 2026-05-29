@@ -6,45 +6,71 @@ import { Navbar } from "@/components/Navbar";
 import { RestaurantCard, RestaurantSkeleton } from "@/components/RestaurantCard";
 import { FilterPanel } from "@/components/MoodFilters";
 import { RandomPicker } from "@/components/RandomPicker";
-import { RESTAURANTS, PRICE_MIN, PRICE_MAX, type Mood } from "@/data/restaurants";
+import { PRICE_MIN, PRICE_MAX, type Mood, type Area, type Restaurant } from "@/data/restaurants";
+import { getRestaurants } from "@/api/restaurants";
+import { useLocation, getDistance } from "@/hooks/use-location";
 
-export const Route = createFileRoute("/")(  {
+export const Route = createFileRoute("/")({
+  loader: () => getRestaurants(),
   head: () => ({
     meta: [
       { title: "SpinBite — Can't decide where to eat?" },
-      { name: "description", content: "Spin and discover your next food spot. A playful random picker for nearby restaurants and cafes." },
+      { name: "description", content: "Spin and discover your next food spot in Bangalore." },
       { property: "og:title", content: "SpinBite — Can't decide where to eat?" },
-      { property: "og:description", content: "Spin and discover your next food spot." },
+      { property: "og:description", content: "Spin and discover your next food spot in Bangalore." },
     ],
   }),
   component: Home,
 });
 
 function Home() {
+  const initialRestaurants = Route.useLoaderData();
   const [moods, setMoods] = useState<Mood[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN, PRICE_MAX]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [loading] = useState(false);
+  const { lat, lng, loading: locLoading } = useLocation();
 
   const toggleMood = (m: Mood) =>
     setMoods((s) => (s.includes(m) ? s.filter((x) => x !== m) : [...s, m]));
 
+  const toggleArea = (a: Area) =>
+    setAreas((s) => (s.includes(a) ? s.filter((x) => x !== a) : [...s, a]));
+
   const clearFilters = () => {
     setMoods([]);
+    setAreas([]);
     setPriceRange([PRICE_MIN, PRICE_MAX]);
   };
 
   const isPriceChanged = priceRange[0] !== PRICE_MIN || priceRange[1] !== PRICE_MAX;
-  const activeFilterCount = moods.length + (isPriceChanged ? 1 : 0);
+  const activeFilterCount = moods.length + areas.length + (isPriceChanged ? 1 : 0);
 
-  const filtered = useMemo(() => {
-    let results = RESTAURANTS;
-    if (moods.length) {
-      results = results.filter((r) => moods.every((m) => r.moods.includes(m)));
+  const filteredAndSorted = useMemo(() => {
+    let results = initialRestaurants;
+    
+    if (areas.length) {
+      results = results.filter((r) => areas.includes(r.area));
     }
+    
+    if (moods.length) {
+      results = results.filter((r) => moods.every((m) => r.moods.includes(m as any)));
+    }
+    
     results = results.filter((r) => r.price >= priceRange[0] && r.price <= priceRange[1]);
+
+    // Calculate distance and sort if location is available
+    if (lat !== null && lng !== null) {
+      return results
+        .map((r) => {
+          const dist = getDistance(lat, lng, r.lat, r.lng);
+          return { ...r, calculatedDistance: dist };
+        })
+        .sort((a, b) => a.calculatedDistance - b.calculatedDistance);
+    }
+
     return results;
-  }, [moods, priceRange]);
+  }, [initialRestaurants, moods, areas, priceRange, lat, lng]);
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -70,7 +96,7 @@ function Home() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mx-auto mt-5 max-w-lg text-base text-muted-foreground sm:text-lg"
           >
-            Spin and discover your next food spot.
+            Spin and discover your next food spot in Bangalore.
           </motion.p>
 
           <motion.div
@@ -99,9 +125,9 @@ function Home() {
       <section id="explore" className="mx-auto max-w-6xl px-5 pb-32">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold sm:text-3xl">Nearby spots</h2>
+            <h2 className="text-2xl font-bold sm:text-3xl">Bangalore spots</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {filtered.length} {filtered.length === 1 ? "place" : "places"} around you
+              {filteredAndSorted.length} {filteredAndSorted.length === 1 ? "place" : "places"} matching filters
             </p>
           </div>
         </div>
@@ -110,6 +136,8 @@ function Home() {
           <FilterPanel
             activeMoods={moods}
             onToggleMood={toggleMood}
+            activeAreas={areas}
+            onToggleArea={toggleArea}
             priceRange={priceRange}
             onPriceChange={setPriceRange}
             onClear={clearFilters}
@@ -117,13 +145,8 @@ function Home() {
           />
         </div>
 
-        {loading ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <RestaurantSkeleton key={i} />
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
+        {/* Loading placeholder when SSR didn't complete or no location yet and we want to wait, though we can just render anyway */}
+        {filteredAndSorted.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-border bg-card/40 p-12 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
               <Sparkles className="h-6 w-6 text-muted-foreground" />
@@ -139,8 +162,8 @@ function Home() {
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((r, i) => (
-              <RestaurantCard key={r.id} r={r} index={i} />
+            {filteredAndSorted.map((r, i) => (
+              <RestaurantCard key={r.id} r={r as Restaurant} distance={(r as any).calculatedDistance} index={i} />
             ))}
           </div>
         )}
@@ -158,7 +181,7 @@ function Home() {
 
       <RandomPicker
         open={pickerOpen}
-        pool={filtered.length ? filtered : RESTAURANTS}
+        pool={filteredAndSorted.length ? (filteredAndSorted as Restaurant[]) : initialRestaurants}
         onClose={() => setPickerOpen(false)}
       />
     </div>
