@@ -5,10 +5,11 @@ import type { Restaurant } from "@/data/restaurants";
 export function RestaurantCard({ r, distance, index = 0 }: { r: Restaurant; distance?: number; index?: number }) {
   return (
     <motion.article
+      layout
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ layout: { type: "spring", stiffness: 300, damping: 30 }, duration: 0.5, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -6 }}
       className="group overflow-hidden rounded-3xl bg-gradient-card shadow-card transition-smooth hover:shadow-glow flex flex-col relative"
     >

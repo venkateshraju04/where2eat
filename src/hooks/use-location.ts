@@ -64,11 +64,21 @@ export function getDistance(lat1: number, lon1: number, lat2: number, lon2: numb
   return R * c;
 }
 
+// Cache distances to avoid recalculating when navigating back and forth
+let distanceCache: { origin: string; distances: Record<string, number>; timestamp: number } | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 // Fetch real driving distances using OSRM Table API
 export async function getRealDistances(originLat: number, originLng: number, restaurants: Restaurant[]): Promise<Record<string, number>> {
   try {
     if (!restaurants.length) return {};
     
+    // Check cache first based on origin and TTL
+    const originKey = `${originLat.toFixed(3)},${originLng.toFixed(3)}`; // rough location (~100m precision)
+    if (distanceCache && distanceCache.origin === originKey && Date.now() - distanceCache.timestamp < CACHE_TTL_MS) {
+      return distanceCache.distances;
+    }
+
     // OSRM expects: {lng},{lat}
     const coords = [`${originLng},${originLat}`];
     restaurants.forEach(r => coords.push(`${r.lng},${r.lat}`));
@@ -95,6 +105,13 @@ export async function getRealDistances(originLat: number, originLng: number, res
       }
     });
     
+    // Save to cache
+    distanceCache = {
+      origin: originKey,
+      distances: distanceMap,
+      timestamp: Date.now(),
+    };
+
     return distanceMap;
   } catch (err) {
     console.error("Failed to fetch real distances, falling back to Haversine", err);
