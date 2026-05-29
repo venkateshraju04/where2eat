@@ -24,8 +24,7 @@ export const getRestaurants = createServerFn({ method: "GET" }).handler(
 );
 
 export const submitSuggestion = createServerFn({ method: "POST" })
-  .validator((data: any) => data)
-  .handler(async ({ data }) => {
+  .handler(async ({ data }: { data: any }) => {
     const { error } = await supabase.from("suggestions").insert([
       {
         name: data.name,
