@@ -4,11 +4,11 @@ import { motion } from "framer-motion";
 import { Sparkles, ArrowDown } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { RestaurantCard, RestaurantSkeleton } from "@/components/RestaurantCard";
-import { MoodFilters } from "@/components/MoodFilters";
+import { FilterPanel } from "@/components/MoodFilters";
 import { RandomPicker } from "@/components/RandomPicker";
-import { RESTAURANTS, type Mood } from "@/data/restaurants";
+import { RESTAURANTS, PRICE_MIN, PRICE_MAX, type Mood } from "@/data/restaurants";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/")(  {
   head: () => ({
     meta: [
       { title: "SpinBite — Can't decide where to eat?" },
@@ -22,16 +22,29 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const [moods, setMoods] = useState<Mood[]>([]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN, PRICE_MAX]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [loading] = useState(false);
 
   const toggleMood = (m: Mood) =>
     setMoods((s) => (s.includes(m) ? s.filter((x) => x !== m) : [...s, m]));
 
+  const clearFilters = () => {
+    setMoods([]);
+    setPriceRange([PRICE_MIN, PRICE_MAX]);
+  };
+
+  const isPriceChanged = priceRange[0] !== PRICE_MIN || priceRange[1] !== PRICE_MAX;
+  const activeFilterCount = moods.length + (isPriceChanged ? 1 : 0);
+
   const filtered = useMemo(() => {
-    if (!moods.length) return RESTAURANTS;
-    return RESTAURANTS.filter((r) => moods.every((m) => r.moods.includes(m)));
-  }, [moods]);
+    let results = RESTAURANTS;
+    if (moods.length) {
+      results = results.filter((r) => moods.every((m) => r.moods.includes(m)));
+    }
+    results = results.filter((r) => r.price >= priceRange[0] && r.price <= priceRange[1]);
+    return results;
+  }, [moods, priceRange]);
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -41,16 +54,6 @@ function Home() {
       <section className="relative overflow-hidden px-5 pb-16 pt-12 sm:pb-24 sm:pt-20">
         <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
         <div className="relative mx-auto max-w-3xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs text-muted-foreground"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            Nearby food, decided in a tap
-          </motion.div>
-
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -80,7 +83,6 @@ function Home() {
               onClick={() => setPickerOpen(true)}
               className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-glow transition-smooth hover:scale-105 animate-pulse-glow"
             >
-              <Sparkles className="h-5 w-5 transition-transform group-hover:rotate-180" />
               Pick For Me
             </button>
             <a
@@ -105,7 +107,14 @@ function Home() {
         </div>
 
         <div className="mb-8">
-          <MoodFilters active={moods} onToggle={toggleMood} />
+          <FilterPanel
+            activeMoods={moods}
+            onToggleMood={toggleMood}
+            priceRange={priceRange}
+            onPriceChange={setPriceRange}
+            onClear={clearFilters}
+            activeCount={activeFilterCount}
+          />
         </div>
 
         {loading ? (
@@ -119,10 +128,10 @@ function Home() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
               <Sparkles className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">No spots match that mood</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Try removing a filter or let us pick for you.</p>
+            <h3 className="text-lg font-semibold">No spots match those filters</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Try adjusting your filters or let us pick for you.</p>
             <button
-              onClick={() => setMoods([])}
+              onClick={clearFilters}
               className="mt-5 rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
             >
               Clear filters
@@ -143,7 +152,7 @@ function Home() {
           onClick={() => setPickerOpen(true)}
           className="pointer-events-auto flex items-center gap-2 rounded-full bg-gradient-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-glow animate-pulse-glow"
         >
-          <Sparkles className="h-4 w-4" /> Pick For Me
+          Pick For Me
         </button>
       </div>
 

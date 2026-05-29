@@ -16,12 +16,16 @@ export interface Restaurant {
   image: string;
   rating: number;
   distance: string;
+  price: number;
   description: string;
   vibes: string[];
   moods: Mood[];
 }
 
 export const MOODS: Mood[] = ["Cheap", "Cafe", "Dessert", "Spicy", "Street Food", "Aesthetic", "Late Night"];
+
+export const PRICE_MIN = 100;
+export const PRICE_MAX = 1000;
 
 export const RESTAURANTS: Restaurant[] = [
   {
@@ -31,6 +35,7 @@ export const RESTAURANTS: Restaurant[] = [
     image: ramen,
     rating: 4.8,
     distance: "0.4 km",
+    price: 350,
     description: "Steaming bowls of tonkotsu broth in a moody neon-lit room.",
     vibes: ["Cozy", "Neon", "Slurpy"],
     moods: ["Spicy", "Late Night", "Aesthetic"],
@@ -42,6 +47,7 @@ export const RESTAURANTS: Restaurant[] = [
     image: burger,
     rating: 4.6,
     distance: "0.7 km",
+    price: 200,
     description: "Crispy-edge smash patties, melty cheese, brioche buns.",
     vibes: ["Casual", "Comfort", "Crunchy"],
     moods: ["Cheap", "Late Night"],
@@ -53,6 +59,7 @@ export const RESTAURANTS: Restaurant[] = [
     image: cafe,
     rating: 4.7,
     distance: "0.3 km",
+    price: 250,
     description: "Latte art, warm lights, the perfect laptop afternoon.",
     vibes: ["Quiet", "Warm", "Slow"],
     moods: ["Cafe", "Aesthetic"],
@@ -64,6 +71,7 @@ export const RESTAURANTS: Restaurant[] = [
     image: tacos,
     rating: 4.9,
     distance: "1.1 km",
+    price: 150,
     description: "Late-night tacos al pastor under a glowing neon sign.",
     vibes: ["Loud", "Lively", "Spicy"],
     moods: ["Street Food", "Late Night", "Cheap", "Spicy"],
@@ -75,6 +83,7 @@ export const RESTAURANTS: Restaurant[] = [
     image: sushi,
     rating: 4.9,
     distance: "1.4 km",
+    price: 800,
     description: "Minimalist omakase counter with hand-cut nigiri.",
     vibes: ["Elegant", "Quiet", "Premium"],
     moods: ["Aesthetic"],
@@ -86,6 +95,7 @@ export const RESTAURANTS: Restaurant[] = [
     image: dessert,
     rating: 4.7,
     distance: "0.8 km",
+    price: 400,
     description: "Molten chocolate lava cakes & artisan ice cream.",
     vibes: ["Sweet", "Decadent", "Romantic"],
     moods: ["Dessert", "Aesthetic"],
@@ -97,6 +107,7 @@ export const RESTAURANTS: Restaurant[] = [
     image: chicken,
     rating: 4.8,
     distance: "0.9 km",
+    price: 300,
     description: "Double-fried wings glazed in fiery gochujang.",
     vibes: ["Spicy", "Sticky", "Crispy"],
     moods: ["Spicy", "Late Night"],
@@ -108,8 +119,10 @@ export const RESTAURANTS: Restaurant[] = [
     image: pizza,
     rating: 4.6,
     distance: "1.6 km",
+    price: 250,
     description: "Wood-fired margherita with charred leopard crust.",
     vibes: ["Classic", "Hearty", "Family"],
     moods: ["Cheap"],
   },
 ];
+
