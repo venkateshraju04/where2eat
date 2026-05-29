@@ -1,0 +1,157 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Sparkles, ArrowDown } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
+import { RestaurantCard, RestaurantSkeleton } from "@/components/RestaurantCard";
+import { MoodFilters } from "@/components/MoodFilters";
+import { RandomPicker } from "@/components/RandomPicker";
+import { RESTAURANTS, type Mood } from "@/data/restaurants";
+
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "SpinBite — Can't decide where to eat?" },
+      { name: "description", content: "Spin and discover your next food spot. A playful random picker for nearby restaurants and cafes." },
+      { property: "og:title", content: "SpinBite — Can't decide where to eat?" },
+      { property: "og:description", content: "Spin and discover your next food spot." },
+    ],
+  }),
+  component: Home,
+});
+
+function Home() {
+  const [moods, setMoods] = useState<Mood[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [loading] = useState(false);
+
+  const toggleMood = (m: Mood) =>
+    setMoods((s) => (s.includes(m) ? s.filter((x) => x !== m) : [...s, m]));
+
+  const filtered = useMemo(() => {
+    if (!moods.length) return RESTAURANTS;
+    return RESTAURANTS.filter((r) => moods.every((m) => r.moods.includes(m)));
+  }, [moods]);
+
+  return (
+    <div className="min-h-screen bg-gradient-hero">
+      <Navbar onPick={() => setPickerOpen(true)} />
+
+      {/* Hero */}
+      <section className="relative overflow-hidden px-5 pb-16 pt-12 sm:pb-24 sm:pt-20">
+        <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+        <div className="relative mx-auto max-w-3xl text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs text-muted-foreground"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            Nearby food, decided in a tap
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.05 }}
+            className="text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl"
+          >
+            Can't decide<br />
+            <span className="gradient-text">where to eat?</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.15 }}
+            className="mx-auto mt-5 max-w-lg text-base text-muted-foreground sm:text-lg"
+          >
+            Spin and discover your next food spot.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.25 }}
+            className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
+          >
+            <button
+              onClick={() => setPickerOpen(true)}
+              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-glow transition-smooth hover:scale-105 animate-pulse-glow"
+            >
+              <Sparkles className="h-5 w-5 transition-transform group-hover:rotate-180" />
+              Pick For Me
+            </button>
+            <a
+              href="#explore"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-6 py-4 text-sm font-medium text-muted-foreground transition-smooth hover:text-foreground"
+            >
+              Browse spots <ArrowDown className="h-4 w-4" />
+            </a>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Explore */}
+      <section id="explore" className="mx-auto max-w-6xl px-5 pb-32">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold sm:text-3xl">Nearby spots</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {filtered.length} {filtered.length === 1 ? "place" : "places"} around you
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <MoodFilters active={moods} onToggle={toggleMood} />
+        </div>
+
+        {loading ? (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <RestaurantSkeleton key={i} />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-border bg-card/40 p-12 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
+              <Sparkles className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold">No spots match that mood</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Try removing a filter or let us pick for you.</p>
+            <button
+              onClick={() => setMoods([])}
+              className="mt-5 rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((r, i) => (
+              <RestaurantCard key={r.id} r={r} index={i} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Mobile sticky pick button */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center p-5 sm:hidden">
+        <button
+          onClick={() => setPickerOpen(true)}
+          className="pointer-events-auto flex items-center gap-2 rounded-full bg-gradient-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-glow animate-pulse-glow"
+        >
+          <Sparkles className="h-4 w-4" /> Pick For Me
+        </button>
+      </div>
+
+      <RandomPicker
+        open={pickerOpen}
+        pool={filtered.length ? filtered : RESTAURANTS}
+        onClose={() => setPickerOpen(false)}
+      />
+    </div>
+  );
+}
