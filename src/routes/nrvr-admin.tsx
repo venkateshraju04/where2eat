@@ -27,6 +27,7 @@ function AdminPage() {
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const [vibes, setVibes] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
   // Check session storage on mount
@@ -99,7 +100,8 @@ function AdminPage() {
           id: approveModal.id,
           lat,
           lng,
-          vibes
+          vibes,
+          imageUrl
         }
       });
       setSuggestions(s => s.filter(x => x.id !== approveModal.id));
@@ -107,6 +109,7 @@ function AdminPage() {
       setLat("");
       setLng("");
       setVibes("");
+      setImageUrl("");
     } catch (err: any) {
       alert("Failed to approve: " + err.message);
     } finally {
@@ -266,6 +269,12 @@ function AdminPage() {
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Vibes (Optional)</label>
                   <input type="text" value={vibes} onChange={e => setVibes(e.target.value)} placeholder="e.g. Cozy, Date Night, Loud" className="w-full rounded-xl bg-secondary/50 border border-border px-3 py-2 text-sm outline-none focus:border-primary transition-smooth" />
                   <p className="text-xs text-muted-foreground mt-1">Comma separated visual tags.</p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Image URL (Optional)</label>
+                  <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="e.g. https://..." className="w-full rounded-xl bg-secondary/50 border border-border px-3 py-2 text-sm outline-none focus:border-primary transition-smooth" />
+                  <p className="text-xs text-muted-foreground mt-1">Right-click a photo on Google Maps &gt; "Copy Image Address".</p>
                 </div>
 
                 <div className="pt-2">

@@ -57,7 +57,7 @@ export const approveSuggestion = createServerFn({ method: "POST" })
       cuisine: suggestion.cuisine || "Unknown",
       area: suggestion.area || "Unknown",
       address: null,
-      image_url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1500&auto=format&fit=crop", // placeholder restaurant image
+      image_url: data.imageUrl || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1500&auto=format&fit=crop", // placeholder restaurant image
       lat: parseFloat(data.lat),
       lng: parseFloat(data.lng),
       rating: null,
