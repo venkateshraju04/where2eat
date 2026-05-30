@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuggestRouteImport } from './routes/suggest'
+import { Route as NrvrAdminRouteImport } from './routes/nrvr-admin'
 import { Route as IndexRouteImport } from './routes/index'
 
 const SuggestRoute = SuggestRouteImport.update({
   id: '/suggest',
   path: '/suggest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NrvrAdminRoute = NrvrAdminRouteImport.update({
+  id: '/nrvr-admin',
+  path: '/nrvr-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/nrvr-admin': typeof NrvrAdminRoute
   '/suggest': typeof SuggestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/nrvr-admin': typeof NrvrAdminRoute
   '/suggest': typeof SuggestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/nrvr-admin': typeof NrvrAdminRoute
   '/suggest': typeof SuggestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/suggest'
+  fullPaths: '/' | '/nrvr-admin' | '/suggest'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/suggest'
-  id: '__root__' | '/' | '/suggest'
+  to: '/' | '/nrvr-admin' | '/suggest'
+  id: '__root__' | '/' | '/nrvr-admin' | '/suggest'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NrvrAdminRoute: typeof NrvrAdminRoute
   SuggestRoute: typeof SuggestRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/suggest'
       fullPath: '/suggest'
       preLoaderRoute: typeof SuggestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nrvr-admin': {
+      id: '/nrvr-admin'
+      path: '/nrvr-admin'
+      fullPath: '/nrvr-admin'
+      preLoaderRoute: typeof NrvrAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NrvrAdminRoute: NrvrAdminRoute,
   SuggestRoute: SuggestRoute,
 }
 export const routeTree = rootRouteImport
