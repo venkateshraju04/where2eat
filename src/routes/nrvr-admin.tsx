@@ -51,6 +51,8 @@ function AdminPage() {
       if (err.message === "Unauthorized") {
         setIsLoggedIn(false);
         sessionStorage.clear();
+        setAdminUser("");
+        setAdminPass("");
       }
     } finally {
       setLoading(false);
@@ -167,7 +169,12 @@ function AdminPage() {
             <Shield className="w-5 h-5" /> Curator Deck
           </div>
           <button 
-            onClick={() => { sessionStorage.clear(); setIsLoggedIn(false); }}
+            onClick={() => { 
+              sessionStorage.clear(); 
+              setIsLoggedIn(false); 
+              setAdminUser(""); 
+              setAdminPass(""); 
+            }}
             className="text-sm text-muted-foreground hover:text-foreground transition-smooth"
           >
             Lock
