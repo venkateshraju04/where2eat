@@ -30,7 +30,7 @@ function Home() {
   const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN, PRICE_MAX]);
   const [pickerOpen, setPickerOpen] = useState(false);
   
-  const { lat, lng, loading: locLoading } = useLocation();
+  const { lat, lng, loading: locLoading, error: locError, requestLocation } = useLocation();
   const [realDistances, setRealDistances] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -134,13 +134,25 @@ function Home() {
 
       {/* Explore */}
       <section id="explore" className="mx-auto max-w-6xl px-5 pb-32">
-        <div className="mb-6 flex items-end justify-between gap-4">
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <h2 className="text-2xl font-bold sm:text-3xl">Bangalore spots</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {filteredAndSorted.length} {filteredAndSorted.length === 1 ? "place" : "places"} matching filters
             </p>
           </div>
+          {lat === null && (
+            <div className="flex flex-col items-start sm:items-end gap-1">
+              <button 
+                onClick={requestLocation}
+                disabled={locLoading}
+                className="text-sm font-semibold text-primary hover:text-primary/80 transition-smooth disabled:opacity-50"
+              >
+                {locLoading ? "Locating..." : "📍 Sort by distance"}
+              </button>
+              {locError && <span className="text-xs text-destructive">{locError}</span>}
+            </div>
+          )}
         </div>
 
         <div className="mb-8">

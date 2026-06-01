@@ -12,11 +12,12 @@ export function useLocation() {
   const [state, setState] = useState<LocationState>({
     lat: null,
     lng: null,
-    loading: true,
+    loading: false,
     error: null,
   });
 
-  useEffect(() => {
+  const requestLocation = () => {
+    setState((s) => ({ ...s, loading: true, error: null }));
     if (!('geolocation' in navigator)) {
       setState((s) => ({ ...s, loading: false, error: 'Geolocation not supported' }));
       return;
@@ -44,9 +45,9 @@ export function useLocation() {
         maximumAge: 5 * 60 * 1000,
       }
     );
-  }, []);
+  };
 
-  return state;
+  return { ...state, requestLocation };
 }
 
 // Keep Haversine as an instant fallback
