@@ -91,6 +91,7 @@ export function RandomPicker({
                     <img
                       src={current.image_url}
                       alt=""
+                      referrerPolicy="no-referrer"
                       className="aspect-[4/3] w-full object-cover blur-[2px]"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
@@ -125,7 +126,7 @@ export function RandomPicker({
                     className="overflow-hidden rounded-3xl bg-gradient-card shadow-glow"
                   >
                     <div className="relative aspect-[4/3]">
-                      <img src={picked.image_url} alt={picked.name} className="h-full w-full object-cover" />
+                      <img src={picked.image_url} alt={picked.name} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
                       <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full glass px-3 py-1.5 text-sm font-semibold">
                         <Star className="h-3.5 w-3.5 fill-primary text-primary" />

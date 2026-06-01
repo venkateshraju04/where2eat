@@ -25,6 +25,7 @@ export function RestaurantCard({ r, distance, index = 0 }: { r: Restaurant; dist
           src={r.image_url}
           alt={r.name}
           loading="lazy"
+          referrerPolicy="no-referrer"
           className="h-full w-full object-cover transition-smooth group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
