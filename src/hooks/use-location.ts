@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import type { Restaurant } from '@/data/restaurants';
+import { useState, useEffect } from "react";
+import type { Restaurant } from "@/data/restaurants";
 
 interface LocationState {
   lat: number | null;
@@ -18,8 +18,8 @@ export function useLocation() {
 
   const requestLocation = () => {
     setState((s) => ({ ...s, loading: true, error: null }));
-    if (!('geolocation' in navigator)) {
-      setState((s) => ({ ...s, loading: false, error: 'Geolocation not supported' }));
+    if (!("geolocation" in navigator)) {
+      setState((s) => ({ ...s, loading: false, error: "Geolocation not supported" }));
       return;
     }
 
@@ -36,14 +36,14 @@ export function useLocation() {
         setState((s) => ({
           ...s,
           loading: false,
-          error: error.message || 'Permission denied',
+          error: error.message || "Permission denied",
         }));
       },
       {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 5 * 60 * 1000,
-      }
+      },
     );
   };
 
@@ -66,46 +66,55 @@ export function getDistance(lat1: number, lon1: number, lat2: number, lon2: numb
 }
 
 // Cache distances to avoid recalculating when navigating back and forth
-let distanceCache: { origin: string; distances: Record<string, number>; timestamp: number } | null = null;
+let distanceCache: { origin: string; distances: Record<string, number>; timestamp: number } | null =
+  null;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 // Fetch real driving distances using OSRM Table API
-export async function getRealDistances(originLat: number, originLng: number, restaurants: Restaurant[]): Promise<Record<string, number>> {
+export async function getRealDistances(
+  originLat: number,
+  originLng: number,
+  restaurants: Restaurant[],
+): Promise<Record<string, number>> {
   try {
     if (!restaurants.length) return {};
-    
+
     // Check cache first based on origin and TTL
     const originKey = `${originLat.toFixed(3)},${originLng.toFixed(3)}`; // rough location (~100m precision)
-    if (distanceCache && distanceCache.origin === originKey && Date.now() - distanceCache.timestamp < CACHE_TTL_MS) {
+    if (
+      distanceCache &&
+      distanceCache.origin === originKey &&
+      Date.now() - distanceCache.timestamp < CACHE_TTL_MS
+    ) {
       return distanceCache.distances;
     }
 
     // OSRM expects: {lng},{lat}
     const coords = [`${originLng},${originLat}`];
-    restaurants.forEach(r => coords.push(`${r.lng},${r.lat}`));
-    
+    restaurants.forEach((r) => coords.push(`${r.lng},${r.lat}`));
+
     // Construct URL with sources=0 (only compute from origin to destinations)
     // and annotations=distance (we want distance in meters, not duration)
-    const url = `https://router.project-osrm.org/table/v1/driving/${coords.join(';')}?sources=0&annotations=distance`;
-    
+    const url = `https://router.project-osrm.org/table/v1/driving/${coords.join(";")}?sources=0&annotations=distance`;
+
     const res = await fetch(url);
-    if (!res.ok) throw new Error('OSRM API failed');
-    
+    if (!res.ok) throw new Error("OSRM API failed");
+
     const data = await res.json();
-    if (!data.distances || !data.distances[0]) throw new Error('Invalid OSRM response');
-    
+    if (!data.distances || !data.distances[0]) throw new Error("Invalid OSRM response");
+
     const distanceMap: Record<string, number> = {};
     const distances = data.distances[0]; // array of distances from source to each coord (including self)
-    
+
     // distances[0] is source to source (0)
     // distances[1] is source to r1
     restaurants.forEach((r, i) => {
       const distMeters = distances[i + 1];
-      if (typeof distMeters === 'number') {
+      if (typeof distMeters === "number") {
         distanceMap[r.id] = distMeters / 1000; // Convert to km
       }
     });
-    
+
     // Save to cache
     distanceCache = {
       origin: originKey,

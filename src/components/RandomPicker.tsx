@@ -45,7 +45,7 @@ export function RandomPicker({
     if (open) spin();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
-  
+
   const getDistStr = (r: Restaurant & { calculatedDistance?: number }) => {
     if (r.calculatedDistance !== undefined) {
       return `${r.calculatedDistance.toFixed(1)} km`;
@@ -126,7 +126,12 @@ export function RandomPicker({
                     className="overflow-hidden rounded-3xl bg-gradient-card shadow-glow"
                   >
                     <div className="relative aspect-[4/3]">
-                      <img src={picked.image_url} alt={picked.name} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                      <img
+                        src={picked.image_url}
+                        alt={picked.name}
+                        referrerPolicy="no-referrer"
+                        className="h-full w-full object-cover"
+                      />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
                       <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full glass px-3 py-1.5 text-sm font-semibold">
                         <Star className="h-3.5 w-3.5 fill-primary text-primary" />
@@ -137,7 +142,9 @@ export function RandomPicker({
                       <div className="flex justify-between items-start">
                         <div>
                           <h2 className="text-3xl font-bold leading-tight">{picked.name}</h2>
-                          <p className="mt-1 text-sm uppercase tracking-wider text-primary">{picked.cuisine}</p>
+                          <p className="mt-1 text-sm uppercase tracking-wider text-primary">
+                            {picked.cuisine}
+                          </p>
                         </div>
                         <div className="text-xs font-medium bg-secondary/50 px-2 py-1 rounded-md shrink-0">
                           ₹{picked.price}
@@ -156,7 +163,10 @@ export function RandomPicker({
                       </div>
                       <div className="grid grid-cols-2 gap-2 pt-1">
                         <a
-                          href={picked.google_maps_url || `https://www.google.com/maps/search/${encodeURIComponent(picked.name + " " + picked.area)}`}
+                          href={
+                            picked.google_maps_url ||
+                            `https://www.google.com/maps/search/${encodeURIComponent(picked.name + " " + picked.area)}`
+                          }
                           target="_blank"
                           rel="noreferrer"
                           className="flex items-center justify-center gap-2 rounded-full bg-gradient-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-soft transition-smooth hover:shadow-glow"
@@ -181,4 +191,3 @@ export function RandomPicker({
     </AnimatePresence>
   );
 }
-

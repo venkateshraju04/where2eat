@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { Analytics } from "@vercel/analytics/react";
 
 import appCss from "../styles.css?url";
 
@@ -74,7 +75,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "SpinBite — Can't decide where to eat?" },
       { name: "theme-color", content: "#1a1424" },
-      { name: "description", content: "Spin and discover your next food spot. A playful random picker for nearby restaurants and cafes." },
+      {
+        name: "description",
+        content:
+          "Spin and discover your next food spot. A playful random picker for nearby restaurants and cafes.",
+      },
       { name: "author", content: "SpinBite" },
       { property: "og:title", content: "SpinBite — Can't decide where to eat?" },
       { property: "og:description", content: "Spin and discover your next food spot." },
@@ -106,6 +111,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
       <body>
         {children}
         <Scripts />
+        <Analytics />
       </body>
     </html>
   );

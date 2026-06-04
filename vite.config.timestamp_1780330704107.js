@@ -10,14 +10,12 @@ var vite_config_default = defineConfig({
     TanStackRouterVite(),
     TanStackStartVite({
       server: {
-        preset: "vercel"
-      }
+        preset: "vercel",
+      },
     }),
     react(),
     tailwindcss(),
-    tsconfigPaths()
-  ]
+    tsconfigPaths(),
+  ],
 });
-export {
-  vite_config_default as default
-};
+export { vite_config_default as default };
