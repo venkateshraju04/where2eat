@@ -2,20 +2,36 @@ import { motion } from "framer-motion";
 import { Star, MapPin, Navigation } from "lucide-react";
 import type { Restaurant } from "@/data/restaurants";
 
-export function RestaurantCard({ r, distance, index = 0 }: { r: Restaurant; distance?: number; index?: number }) {
+export function RestaurantCard({
+  r,
+  distance,
+  index = 0,
+}: {
+  r: Restaurant;
+  distance?: number;
+  index?: number;
+}) {
   return (
     <motion.article
       layout
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ layout: { type: "spring", stiffness: 300, damping: 30 }, duration: 0.5, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+      transition={{
+        layout: { type: "spring", stiffness: 300, damping: 30 },
+        duration: 0.5,
+        delay: index * 0.05,
+        ease: [0.16, 1, 0.3, 1],
+      }}
       whileHover={{ y: -6 }}
       className="group overflow-hidden rounded-3xl bg-gradient-card shadow-card transition-smooth hover:shadow-glow flex flex-col relative"
     >
-      <a 
-        href={r.google_maps_url || `https://www.google.com/maps/search/${encodeURIComponent(r.name + " " + r.area)}`} 
-        target="_blank" 
+      <a
+        href={
+          r.google_maps_url ||
+          `https://www.google.com/maps/search/${encodeURIComponent(r.name + " " + r.area)}`
+        }
+        target="_blank"
         rel="noreferrer"
         className="absolute inset-0 z-10"
         aria-label={`Open ${r.name} in Google Maps`}
@@ -54,7 +70,10 @@ export function RestaurantCard({ r, distance, index = 0 }: { r: Restaurant; dist
         <p className="line-clamp-2 text-sm text-muted-foreground flex-1">{r.description}</p>
         <div className="flex flex-wrap gap-1.5 pt-1">
           {r.vibes.slice(0, 3).map((v) => (
-            <span key={v} className="rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground z-20">
+            <span
+              key={v}
+              className="rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground z-20"
+            >
               {v}
             </span>
           ))}

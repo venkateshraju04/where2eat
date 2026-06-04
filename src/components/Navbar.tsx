@@ -33,4 +33,3 @@ export function Navbar({ onPick }: { onPick?: () => void }) {
     </header>
   );
 }
-

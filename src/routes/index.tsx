@@ -17,7 +17,10 @@ export const Route = createFileRoute("/")({
       { title: "SpinBite — Can't decide where to eat?" },
       { name: "description", content: "Spin and discover your next food spot in Bangalore." },
       { property: "og:title", content: "SpinBite — Can't decide where to eat?" },
-      { property: "og:description", content: "Spin and discover your next food spot in Bangalore." },
+      {
+        property: "og:description",
+        content: "Spin and discover your next food spot in Bangalore.",
+      },
     ],
   }),
   component: Home,
@@ -29,7 +32,7 @@ function Home() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN, PRICE_MAX]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  
+
   const { lat, lng, loading: locLoading, error: locError, requestLocation } = useLocation();
   const [realDistances, setRealDistances] = useState<Record<string, number>>({});
 
@@ -56,15 +59,15 @@ function Home() {
 
   const filteredAndSorted = useMemo(() => {
     let results = initialRestaurants;
-    
+
     if (areas.length) {
       results = results.filter((r) => areas.includes(r.area));
     }
-    
+
     if (moods.length) {
       results = results.filter((r) => moods.every((m) => r.moods.includes(m as any)));
     }
-    
+
     results = results.filter((r) => r.price >= priceRange[0] && r.price <= priceRange[1]);
 
     // Calculate distance and sort if location is available
@@ -72,9 +75,10 @@ function Home() {
       return results
         .map((r) => {
           // Use real driving distance if available, fallback to Haversine straight-line
-          const dist = realDistances[r.id] !== undefined 
-            ? realDistances[r.id] 
-            : getDistance(lat, lng, r.lat, r.lng);
+          const dist =
+            realDistances[r.id] !== undefined
+              ? realDistances[r.id]
+              : getDistance(lat, lng, r.lat, r.lng);
           return { ...r, calculatedDistance: dist };
         })
         .sort((a, b) => a.calculatedDistance - b.calculatedDistance);
@@ -97,7 +101,8 @@ function Home() {
             transition={{ duration: 0.7, delay: 0.05 }}
             className="text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl"
           >
-            Can't decide<br />
+            Can't decide
+            <br />
             <span className="gradient-text">where to eat?</span>
           </motion.h1>
 
@@ -138,12 +143,13 @@ function Home() {
           <div>
             <h2 className="text-2xl font-bold sm:text-3xl">Bangalore spots</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {filteredAndSorted.length} {filteredAndSorted.length === 1 ? "place" : "places"} matching filters
+              {filteredAndSorted.length} {filteredAndSorted.length === 1 ? "place" : "places"}{" "}
+              matching filters
             </p>
           </div>
           {lat === null && (
             <div className="flex flex-col items-start sm:items-end gap-1">
-              <button 
+              <button
                 onClick={requestLocation}
                 disabled={locLoading}
                 className="text-sm font-semibold text-primary hover:text-primary/80 transition-smooth disabled:opacity-50"
@@ -174,7 +180,9 @@ function Home() {
               <Sparkles className="h-6 w-6 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold">No spots match those filters</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Try adjusting your filters or let us pick for you.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Try adjusting your filters or let us pick for you.
+            </p>
             <button
               onClick={clearFilters}
               className="mt-5 rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
@@ -185,7 +193,12 @@ function Home() {
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filteredAndSorted.map((r, i) => (
-              <RestaurantCard key={r.id} r={r as Restaurant} distance={(r as any).calculatedDistance} index={i} />
+              <RestaurantCard
+                key={r.id}
+                r={r as Restaurant}
+                distance={(r as any).calculatedDistance}
+                index={i}
+              />
             ))}
           </div>
         )}

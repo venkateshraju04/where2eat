@@ -5,10 +5,7 @@ import { SEED_RESTAURANTS, type Restaurant } from "../data/restaurants";
 export const getRestaurants = createServerFn({ method: "GET" }).handler(
   async (): Promise<Restaurant[]> => {
     // Attempt to fetch from Supabase
-    const { data, error } = await supabase
-      .from("restaurants")
-      .select("*")
-      .eq("is_active", true);
+    const { data, error } = await supabase.from("restaurants").select("*").eq("is_active", true);
 
     if (error || !data || data.length === 0) {
       console.warn("Falling back to SEED_RESTAURANTS (Supabase error or empty DB)", error);
@@ -23,8 +20,8 @@ export const getRestaurants = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const submitSuggestion = createServerFn({ method: "POST" })
-  .handler(async ({ data }: { data: any }) => {
+export const submitSuggestion = createServerFn({ method: "POST" }).handler(
+  async ({ data }: { data: any }) => {
     const { error } = await supabase.from("suggestions").insert([
       {
         name: data.name,
@@ -45,4 +42,5 @@ export const submitSuggestion = createServerFn({ method: "POST" })
     }
 
     return { success: true };
-  });
+  },
+);
