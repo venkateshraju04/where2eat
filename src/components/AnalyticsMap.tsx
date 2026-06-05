@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { getAnalyticsLocations } from "@/api/admin";
+import L from "leaflet";
+
+const defaultIcon = typeof window !== "undefined" ? L.icon({
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+}) : null;
 
 interface AnalyticsMapProps {
   adminUser: string;
@@ -12,10 +22,29 @@ export function AnalyticsMap({ adminUser, adminPass }: AnalyticsMapProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+
   useEffect(() => {
     let mounted = true;
     
-    getAnalyticsLocations({ data: { adminUser, adminPass } })
+    fetch("/api/admin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "getAnalytics",
+        adminUser,
+        adminPass,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().then((err) => {
+            throw new Error(err.error || "Failed to load analytics");
+          });
+        }
+        return res.json();
+      })
       .then((data) => {
         if (mounted) {
           setLocations(data);
@@ -73,7 +102,7 @@ export function AnalyticsMap({ adminUser, adminPass }: AnalyticsMapProps) {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             {locations.map((loc) => (
-              <Marker key={loc.id} position={[loc.lat, loc.lng]}>
+              <Marker key={loc.id} position={[loc.lat, loc.lng]} icon={defaultIcon || undefined}>
                 <Popup>
                   <div className="text-sm">
                     <strong>IP:</strong> {loc.ip_address || "Unknown"}

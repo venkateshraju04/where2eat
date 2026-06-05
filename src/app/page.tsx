@@ -1,35 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowDown } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
-import { RestaurantCard, RestaurantSkeleton } from "@/components/RestaurantCard";
+import { RestaurantCard } from "@/components/RestaurantCard";
 import { FilterPanel } from "@/components/MoodFilters";
 import { RandomPicker } from "@/components/RandomPicker";
 import { PRICE_MIN, PRICE_MAX, type Mood, type Area, type Restaurant } from "@/data/restaurants";
-import { getRestaurants } from "@/api/restaurants";
 import { useLocation, getDistance, getRealDistances } from "@/hooks/use-location";
-import { useServerFn } from "@tanstack/react-start";
-import { logLocationAnalytics } from "@/api/analytics";
 
-export const Route = createFileRoute("/")({
-  loader: () => getRestaurants(),
-  head: () => ({
-    meta: [
-      { title: "SpinBite — Can't decide where to eat?" },
-      { name: "description", content: "Spin and discover your next food spot in Bangalore." },
-      { property: "og:title", content: "SpinBite — Can't decide where to eat?" },
-      {
-        property: "og:description",
-        content: "Spin and discover your next food spot in Bangalore.",
-      },
-    ],
-  }),
-  component: Home,
-});
-
-function Home() {
-  const initialRestaurants = Route.useLoaderData();
+export default function Home() {
+  const [initialRestaurants, setInitialRestaurants] = useState<Restaurant[]>([]);
   const [moods, setMoods] = useState<Mood[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN, PRICE_MAX]);
@@ -37,17 +19,26 @@ function Home() {
 
   const { lat, lng, loading: locLoading, error: locError, requestLocation } = useLocation();
   const [realDistances, setRealDistances] = useState<Record<string, number>>({});
-  const logAnalytics = useServerFn(logLocationAnalytics);
+
+  // Fetch restaurants on mount
+  useEffect(() => {
+    fetch("/api/restaurants")
+      .then((res) => res.json())
+      .then((data) => setInitialRestaurants(data))
+      .catch((err) => console.error("Failed to load restaurants:", err));
+  }, []);
 
   useEffect(() => {
     if (lat !== null && lng !== null && initialRestaurants.length > 0) {
       getRealDistances(lat, lng, initialRestaurants).then(setRealDistances);
-      // Fire and forget the analytics logger
-      logAnalytics({ data: { lat, lng } }).catch((err) => {
-        console.error("Failed to log location", err);
-      });
+      // Fire and forget analytics
+      fetch("/api/analytics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat, lng }),
+      }).catch((err) => console.error("Failed to log location", err));
     }
-  }, [lat, lng, initialRestaurants, logAnalytics]);
+  }, [lat, lng, initialRestaurants]);
 
   const toggleMood = (m: Mood) =>
     setMoods((s) => (s.includes(m) ? s.filter((x) => x !== m) : [...s, m]));
@@ -77,11 +68,9 @@ function Home() {
 
     results = results.filter((r) => r.price >= priceRange[0] && r.price <= priceRange[1]);
 
-    // Calculate distance and sort if location is available
     if (lat !== null && lng !== null) {
       return results
         .map((r) => {
-          // Use real driving distance if available, fallback to Haversine straight-line
           const dist =
             realDistances[r.id] !== undefined
               ? realDistances[r.id]
@@ -108,7 +97,7 @@ function Home() {
             transition={{ duration: 0.7, delay: 0.05 }}
             className="text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl"
           >
-            Can't decide
+            Can&apos;t decide
             <br />
             <span className="gradient-text">where to eat?</span>
           </motion.h1>

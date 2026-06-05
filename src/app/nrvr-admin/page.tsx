@@ -1,25 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+"use client";
+
+import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, Shield, RefreshCw } from "lucide-react";
-import { getPendingSuggestions, approveSuggestion, rejectSuggestion } from "@/api/admin";
-import { lazy, Suspense } from "react";
+import dynamic from "next/dynamic";
 
-const AnalyticsMap = lazy(() =>
-  import("@/components/AnalyticsMap").then((m) => ({ default: m.AnalyticsMap }))
+const AnalyticsMap = dynamic(
+  () => import("@/components/AnalyticsMap").then((m) => m.AnalyticsMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="text-center py-20 text-muted-foreground animate-pulse">
+        Loading Analytics Map...
+      </div>
+    ),
+  }
 );
 
-export const Route = createFileRoute("/nrvr-admin")({
-  head: () => ({
-    meta: [
-      { title: "Curator Deck" },
-      { name: "robots", content: "noindex, nofollow" }, // Prevents search engines from indexing this secret route
-    ],
-  }),
-  component: AdminPage,
-});
-
-function AdminPage() {
+export default function AdminPage() {
   const [adminUser, setAdminUser] = useState("");
   const [adminPass, setAdminPass] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -51,7 +49,16 @@ function AdminPage() {
     setLoading(true);
     setError("");
     try {
-      const data = await getPendingSuggestions({ data: { adminUser, adminPass } });
+      const res = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getPending", adminUser, adminPass }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || "Unauthorized");
+      }
+      const data = await res.json();
       setSuggestions(data);
     } catch (err: any) {
       setError(err.message || "Failed to load");
@@ -84,7 +91,15 @@ function AdminPage() {
     if (!confirm("Are you sure you want to reject this suggestion?")) return;
     setActionLoading(true);
     try {
-      await rejectSuggestion({ data: { adminUser, adminPass, id } });
+      const res = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reject", adminUser, adminPass, id }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || "Failed to reject");
+      }
       setSuggestions((s) => s.filter((x) => x.id !== id));
     } catch (err: any) {
       alert("Failed to reject: " + err.message);
@@ -99,8 +114,11 @@ function AdminPage() {
 
     setActionLoading(true);
     try {
-      await approveSuggestion({
-        data: {
+      const res = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "approve",
           adminUser,
           adminPass,
           id: approveModal.id,
@@ -108,8 +126,12 @@ function AdminPage() {
           lng,
           vibes,
           imageUrl,
-        },
+        }),
       });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || "Failed to approve");
+      }
       setSuggestions((s) => s.filter((x) => x.id !== approveModal.id));
       setApproveModal(null);
       setLat("");
@@ -198,13 +220,21 @@ function AdminPage() {
       <main className="max-w-5xl mx-auto px-5 pt-8">
         <div className="flex gap-6 mb-8 border-b border-border/50">
           <button
-            className={`pb-3 text-lg font-bold transition-smooth ${activeTab === "suggestions" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            className={`pb-3 text-lg font-bold transition-smooth ${
+              activeTab === "suggestions"
+                ? "border-b-2 border-primary text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
             onClick={() => setActiveTab("suggestions")}
           >
             Pending Suggestions
           </button>
           <button
-            className={`pb-3 text-lg font-bold transition-smooth ${activeTab === "analytics" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            className={`pb-3 text-lg font-bold transition-smooth ${
+              activeTab === "analytics"
+                ? "border-b-2 border-primary text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
             onClick={() => setActiveTab("analytics")}
           >
             Analytics Map
@@ -223,70 +253,76 @@ function AdminPage() {
               </button>
             </div>
 
-        {error && <div className="p-4 bg-red-500/10 text-red-500 rounded-xl mb-6">{error}</div>}
+            {error && <div className="p-4 bg-red-500/10 text-red-500 rounded-xl mb-6">{error}</div>}
 
-        {loading && !suggestions.length ? (
-          <div className="text-center py-20 text-muted-foreground animate-pulse">Loading...</div>
-        ) : suggestions.length === 0 ? (
-          <div className="text-center py-20 glass rounded-3xl border border-dashed border-border">
-            <Check className="w-10 h-10 text-primary mx-auto mb-3 opacity-50" />
-            <p className="text-lg font-medium">All caught up!</p>
-            <p className="text-sm text-muted-foreground mt-1">No pending suggestions.</p>
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {suggestions.map((s) => (
-              <motion.div
-                key={s.id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="glass rounded-2xl p-5 shadow-card flex flex-col"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="text-xl font-bold">{s.name}</h3>
-                    <p className="text-primary text-sm font-medium">
-                      {s.cuisine} • {s.area}
-                    </p>
-                  </div>
-                  <div className="bg-secondary px-2 py-1 rounded-md text-xs font-semibold">
-                    ₹{s.price}
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground flex-1 mb-4">{s.description}</p>
-                <div className="text-xs text-muted-foreground mb-4">
-                  <strong>Suggested by:</strong> {s.submitter_name || "Anonymous"}
-                  <br />
-                  <strong>Moods:</strong> {s.suggested_moods?.join(", ") || "None"}
-                </div>
+            {loading && !suggestions.length ? (
+              <div className="text-center py-20 text-muted-foreground animate-pulse">Loading...</div>
+            ) : suggestions.length === 0 ? (
+              <div className="text-center py-20 glass rounded-3xl border border-dashed border-border">
+                <Check className="w-10 h-10 text-primary mx-auto mb-3 opacity-50" />
+                <p className="text-lg font-medium">All caught up!</p>
+                <p className="text-sm text-muted-foreground mt-1">No pending suggestions.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {suggestions.map((s) => (
+                  <motion.div
+                    key={s.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="glass rounded-2xl p-5 shadow-card flex flex-col"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-xl font-bold">{s.name}</h3>
+                        <p className="text-primary text-sm font-medium">
+                          {s.cuisine} • {s.area}
+                        </p>
+                      </div>
+                      <div className="bg-secondary px-2 py-1 rounded-md text-xs font-semibold">
+                        ₹{s.price}
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground flex-1 mb-4">{s.description}</p>
+                    <div className="text-xs text-muted-foreground mb-4">
+                      <strong>Suggested by:</strong> {s.submitter_name || "Anonymous"}
+                      <br />
+                      <strong>Moods:</strong> {s.suggested_moods?.join(", ") || "None"}
+                    </div>
 
-                <div className="grid grid-cols-2 gap-2 mt-auto">
-                  <button
-                    onClick={() => handleReject(s.id)}
-                    disabled={actionLoading}
-                    className="flex justify-center items-center gap-1.5 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-red-500/10 hover:text-red-500 transition-smooth"
-                  >
-                    <X className="w-4 h-4" /> Reject
-                  </button>
-                  <button
-                    onClick={() => setApproveModal(s)}
-                    disabled={actionLoading}
-                    className="flex justify-center items-center gap-1.5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:scale-[1.02] shadow-glow transition-smooth"
-                  >
-                    <Check className="w-4 h-4" /> Approve
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
+                    <div className="grid grid-cols-2 gap-2 mt-auto">
+                      <button
+                        onClick={() => handleReject(s.id)}
+                        disabled={actionLoading}
+                        className="flex justify-center items-center gap-1.5 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-red-500/10 hover:text-red-500 transition-smooth"
+                      >
+                        <X className="w-4 h-4" /> Reject
+                      </button>
+                      <button
+                        onClick={() => setApproveModal(s)}
+                        disabled={actionLoading}
+                        className="flex justify-center items-center gap-1.5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:scale-[1.02] shadow-glow transition-smooth"
+                      >
+                        <Check className="w-4 h-4" /> Approve
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </>
         )}
 
         {activeTab === "analytics" && (
-          <Suspense fallback={<div className="text-center py-20 text-muted-foreground animate-pulse">Loading Analytics...</div>}>
-            {typeof window !== "undefined" && <AnalyticsMap adminUser={adminUser} adminPass={adminPass} />}
+          <Suspense
+            fallback={
+              <div className="text-center py-20 text-muted-foreground animate-pulse">
+                Loading Analytics...
+              </div>
+            }
+          >
+            <AnalyticsMap adminUser={adminUser} adminPass={adminPass} />
           </Suspense>
         )}
       </main>

@@ -1,19 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { MOODS, AREAS, type Mood, type Area } from "@/data/restaurants";
-import { submitSuggestion } from "@/api/restaurants";
 import { Sparkles, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export const Route = createFileRoute("/suggest")({
-  head: () => ({
-    meta: [{ title: "Suggest a Spot — SpinBite" }],
-  }),
-  component: SuggestPage,
-});
-
-function SuggestPage() {
+export default function SuggestPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,13 +31,16 @@ function SuggestPage() {
     setError(null);
 
     try {
-      await submitSuggestion({
-        data: {
+      const res = await fetch("/api/restaurants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           ...formData,
           price: parseInt(formData.price) || null,
           suggested_moods: selectedMoods,
-        },
+        }),
       });
+      if (!res.ok) throw new Error("Failed to submit");
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
@@ -69,7 +65,7 @@ function SuggestPage() {
             </div>
             <h2 className="text-2xl font-bold">Thanks for the suggestion!</h2>
             <p className="mt-2 text-muted-foreground">
-              We'll review it and add it to SpinBite soon.
+              We&apos;ll review it and add it to SpinBite soon.
             </p>
             <button
               onClick={() => {
@@ -188,7 +184,7 @@ function SuggestPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-sm font-medium">Vibe & Mood Tags</label>
+                <label className="text-sm font-medium">Vibe &amp; Mood Tags</label>
                 <div className="flex flex-wrap gap-2">
                   {MOODS.map((m) => {
                     const isActive = selectedMoods.includes(m);
