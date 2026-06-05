@@ -9,6 +9,8 @@ import { RandomPicker } from "@/components/RandomPicker";
 import { PRICE_MIN, PRICE_MAX, type Mood, type Area, type Restaurant } from "@/data/restaurants";
 import { getRestaurants } from "@/api/restaurants";
 import { useLocation, getDistance, getRealDistances } from "@/hooks/use-location";
+import { useServerFn } from "@tanstack/react-start";
+import { logLocationAnalytics } from "@/api/analytics";
 
 export const Route = createFileRoute("/")({
   loader: () => getRestaurants(),
@@ -35,12 +37,17 @@ function Home() {
 
   const { lat, lng, loading: locLoading, error: locError, requestLocation } = useLocation();
   const [realDistances, setRealDistances] = useState<Record<string, number>>({});
+  const logAnalytics = useServerFn(logLocationAnalytics);
 
   useEffect(() => {
     if (lat !== null && lng !== null && initialRestaurants.length > 0) {
       getRealDistances(lat, lng, initialRestaurants).then(setRealDistances);
+      // Fire and forget the analytics logger
+      logAnalytics({ data: { lat, lng } }).catch((err) => {
+        console.error("Failed to log location", err);
+      });
     }
-  }, [lat, lng, initialRestaurants]);
+  }, [lat, lng, initialRestaurants, logAnalytics]);
 
   const toggleMood = (m: Mood) =>
     setMoods((s) => (s.includes(m) ? s.filter((x) => x !== m) : [...s, m]));
