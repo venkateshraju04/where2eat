@@ -88,3 +88,18 @@ export const approveSuggestion = createServerFn({ method: "POST" }).handler(
     return { success: true };
   },
 );
+
+export const getAnalyticsLocations = createServerFn({ method: "POST" }).handler(
+  async ({ data }: { data: any }) => {
+    verifyAdmin(data);
+
+    const { data: locations, error } = await supabase
+      .from("analytics")
+      .select("id, lat, lng, created_at, ip_address")
+      .not("lat", "is", null)
+      .not("lng", "is", null);
+
+    if (error) throw new Error("Failed to fetch analytics: " + error.message);
+    return locations;
+  },
+);

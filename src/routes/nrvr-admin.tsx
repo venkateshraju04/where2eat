@@ -3,6 +3,11 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, Shield, RefreshCw } from "lucide-react";
 import { getPendingSuggestions, approveSuggestion, rejectSuggestion } from "@/api/admin";
+import { lazy, Suspense } from "react";
+
+const AnalyticsMap = lazy(() =>
+  import("@/components/AnalyticsMap").then((m) => ({ default: m.AnalyticsMap }))
+);
 
 export const Route = createFileRoute("/nrvr-admin")({
   head: () => ({
@@ -18,6 +23,7 @@ function AdminPage() {
   const [adminUser, setAdminUser] = useState("");
   const [adminPass, setAdminPass] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [activeTab, setActiveTab] = useState<"suggestions" | "analytics">("suggestions");
 
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -190,18 +196,32 @@ function AdminPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-5 pt-8">
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Pending Suggestions</h1>
-            <p className="text-muted-foreground mt-1">Review community submissions</p>
-          </div>
+        <div className="flex gap-6 mb-8 border-b border-border/50">
           <button
-            onClick={fetchSuggestions}
-            className="p-2.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-smooth"
+            className={`pb-3 text-lg font-bold transition-smooth ${activeTab === "suggestions" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            onClick={() => setActiveTab("suggestions")}
           >
-            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
+            Pending Suggestions
+          </button>
+          <button
+            className={`pb-3 text-lg font-bold transition-smooth ${activeTab === "analytics" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            onClick={() => setActiveTab("analytics")}
+          >
+            Analytics Map
           </button>
         </div>
+
+        {activeTab === "suggestions" && (
+          <>
+            <div className="flex justify-between items-end mb-6">
+              <p className="text-muted-foreground">Review community submissions</p>
+              <button
+                onClick={fetchSuggestions}
+                className="p-2.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-smooth"
+              >
+                <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
+              </button>
+            </div>
 
         {error && <div className="p-4 bg-red-500/10 text-red-500 rounded-xl mb-6">{error}</div>}
 
@@ -260,6 +280,14 @@ function AdminPage() {
               </motion.div>
             ))}
           </div>
+        )}
+          </>
+        )}
+
+        {activeTab === "analytics" && (
+          <Suspense fallback={<div className="text-center py-20 text-muted-foreground animate-pulse">Loading Analytics...</div>}>
+            {typeof window !== "undefined" && <AnalyticsMap adminUser={adminUser} adminPass={adminPass} />}
+          </Suspense>
         )}
       </main>
 
