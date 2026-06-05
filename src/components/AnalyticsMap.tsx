@@ -2,14 +2,17 @@ import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
-const defaultIcon = typeof window !== "undefined" ? L.icon({
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+const customIcon = typeof window !== "undefined" ? L.divIcon({
+  html: `
+    <div class="relative flex h-6 w-6 items-center justify-center">
+      <div class="absolute h-6 w-6 animate-ping rounded-full bg-primary opacity-60" style="animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; background-color: oklch(0.72 0.19 45);"></div>
+      <div class="relative h-3 w-3 rounded-full bg-primary border-2 border-white shadow-glow" style="background-color: oklch(0.72 0.19 45); box-shadow: 0 0 8px oklch(0.72 0.19 45);"></div>
+    </div>
+  `,
+  className: "custom-div-icon",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -12]
 }) : null;
 
 interface AnalyticsMapProps {
@@ -102,7 +105,7 @@ export function AnalyticsMap({ adminUser, adminPass }: AnalyticsMapProps) {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             {locations.map((loc) => (
-              <Marker key={loc.id} position={[loc.lat, loc.lng]} icon={defaultIcon || undefined}>
+              <Marker key={loc.id} position={[loc.lat, loc.lng]} icon={customIcon || undefined}>
                 <Popup>
                   <div className="text-sm">
                     <strong>IP:</strong> {loc.ip_address || "Unknown"}
