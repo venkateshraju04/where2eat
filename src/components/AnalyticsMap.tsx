@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const customIcon = typeof window !== "undefined" ? L.divIcon({
   html: `
@@ -20,14 +21,37 @@ interface AnalyticsMapProps {
   adminPass: string;
 }
 
+// Helper component to adjust map bounds dynamically to fit all active markers
+function ChangeView({ markers }: { markers: any[] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (markers.length > 0) {
+      const validPoints = markers
+        .map((m) => {
+          const lat = typeof m.lat === "string" ? parseFloat(m.lat) : m.lat;
+          const lng = typeof m.lng === "string" ? parseFloat(m.lng) : m.lng;
+          return { lat, lng };
+        })
+        .filter((p) => !isNaN(p.lat) && !isNaN(p.lng) && p.lat !== null && p.lng !== null);
+
+      if (validPoints.length > 0) {
+        console.log("Fitting map bounds to points:", validPoints);
+        const bounds = L.latLngBounds(validPoints.map((p) => [p.lat, p.lng]));
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      }
+    }
+  }, [markers, map]);
+  return null;
+}
+
 export function AnalyticsMap({ adminUser, adminPass }: AnalyticsMapProps) {
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-
   useEffect(() => {
     let mounted = true;
+    console.log("Fetching map analytics...");
     
     fetch("/api/admin", {
       method: "POST",
@@ -50,12 +74,14 @@ export function AnalyticsMap({ adminUser, adminPass }: AnalyticsMapProps) {
       })
       .then((data) => {
         if (mounted) {
+          console.log("Analytics locations successfully fetched:", data);
           setLocations(data);
           setLoading(false);
         }
       })
       .catch((err) => {
         if (mounted) {
+          console.error("Error loading analytics locations:", err);
           setError(err.message || "Failed to load analytics");
           setLoading(false);
         }
@@ -104,17 +130,24 @@ export function AnalyticsMap({ adminUser, adminPass }: AnalyticsMapProps) {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {locations.map((loc) => (
-              <Marker key={loc.id} position={[loc.lat, loc.lng]} icon={customIcon || undefined}>
-                <Popup>
-                  <div className="text-sm">
-                    <strong>IP:</strong> {loc.ip_address || "Unknown"}
-                    <br />
-                    <strong>Time:</strong> {new Date(loc.created_at).toLocaleString()}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            <ChangeView markers={locations} />
+            {locations.map((loc) => {
+              const latVal = typeof loc.lat === "string" ? parseFloat(loc.lat) : loc.lat;
+              const lngVal = typeof loc.lng === "string" ? parseFloat(loc.lng) : loc.lng;
+              if (isNaN(latVal) || isNaN(lngVal) || latVal === null || lngVal === null) return null;
+              
+              return (
+                <Marker key={loc.id} position={[latVal, lngVal]} icon={customIcon || undefined}>
+                  <Popup>
+                    <div className="text-sm text-foreground">
+                      <strong>IP:</strong> {loc.ip_address || "Unknown"}
+                      <br />
+                      <strong>Time:</strong> {new Date(loc.created_at).toLocaleString()}
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
           </MapContainer>
         )}
       </div>
