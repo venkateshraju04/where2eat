@@ -20,8 +20,10 @@ export default function Home() {
   const { lat, lng, loading: locLoading, error: locError, requestLocation } = useLocation();
   const [realDistances, setRealDistances] = useState<Record<string, number>>({});
 
-  // Fetch restaurants on mount
+  // Fetch restaurants and request location on mount
   useEffect(() => {
+    requestLocation();
+
     fetch("/api/restaurants")
       .then((res) => res.json())
       .then((data) => setInitialRestaurants(data))
@@ -143,18 +145,11 @@ export default function Home() {
               matching filters
             </p>
           </div>
-          {lat === null && (
-            <div className="flex flex-col items-start sm:items-end gap-1">
-              <button
-                onClick={requestLocation}
-                disabled={locLoading}
-                className="text-sm font-semibold text-primary hover:text-primary/80 transition-smooth disabled:opacity-50"
-              >
-                {locLoading ? "Locating..." : "📍 Sort by distance"}
-              </button>
-              {locError && <span className="text-xs text-destructive">{locError}</span>}
-            </div>
-          )}
+          <div className="flex flex-col items-start sm:items-end gap-1 text-xs text-muted-foreground">
+            {locLoading && <span className="animate-pulse">📍 Locating...</span>}
+            {locError && <span className="text-destructive">📍 {locError}</span>}
+            {lat !== null && lng !== null && <span className="text-primary font-medium">📍 Sorted by nearest</span>}
+          </div>
         </div>
 
         <div className="mb-8">
