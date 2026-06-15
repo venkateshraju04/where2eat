@@ -7,7 +7,7 @@ import { Navbar } from "@/components/Navbar";
 import { RestaurantCard } from "@/components/RestaurantCard";
 import { FilterPanel } from "@/components/MoodFilters";
 import { RandomPicker } from "@/components/RandomPicker";
-import { PRICE_MIN, PRICE_MAX, type Mood, type Area, type Restaurant } from "@/data/restaurants";
+import { PRICE_MIN, PRICE_MAX, type Mood, type Area, type Restaurant, AREA_CENTERS } from "@/data/restaurants";
 import { useLocation, getDistance, getRealDistances } from "@/hooks/use-location";
 
 export default function Home() {
@@ -20,6 +20,20 @@ export default function Home() {
   const { lat, lng, loading: locLoading, error: locError, requestLocation } = useLocation();
   const [realDistances, setRealDistances] = useState<Record<string, number>>({});
   const [visibleCount, setVisibleCount] = useState(12);
+
+  // Determine effective coordinates (GPS or Area Center fallback)
+  const { effectiveLat, effectiveLng } = useMemo(() => {
+    if (lat !== null && lng !== null) {
+      return { effectiveLat: lat, effectiveLng: lng };
+    }
+    if (areas.length > 0) {
+      const center = AREA_CENTERS[areas[0]];
+      if (center) {
+        return { effectiveLat: center.lat, effectiveLng: center.lng };
+      }
+    }
+    return { effectiveLat: null, effectiveLng: null };
+  }, [lat, lng, areas]);
 
   // Reset pagination when filters or location change
   useEffect(() => {
@@ -35,16 +49,18 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (lat !== null && lng !== null && initialRestaurants.length > 0) {
-      getRealDistances(lat, lng, initialRestaurants).then(setRealDistances);
-      // Fire and forget analytics
-      fetch("/api/analytics", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat, lng }),
-      }).catch((err) => console.error("Failed to log location", err));
+    if (effectiveLat !== null && effectiveLng !== null && initialRestaurants.length > 0) {
+      getRealDistances(effectiveLat, effectiveLng, initialRestaurants).then(setRealDistances);
+      // Fire and forget analytics only for real GPS coords
+      if (lat !== null && lng !== null) {
+        fetch("/api/analytics", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat, lng }),
+        }).catch((err) => console.error("Failed to log location", err));
+      }
     }
-  }, [lat, lng, initialRestaurants]);
+  }, [effectiveLat, effectiveLng, lat, lng, initialRestaurants]);
 
   const toggleMood = (m: Mood) =>
     setMoods((s) => (s.includes(m) ? s.filter((x) => x !== m) : [...s, m]));
@@ -74,20 +90,20 @@ export default function Home() {
 
     results = results.filter((r) => r.price >= priceRange[0] && r.price <= priceRange[1]);
 
-    if (lat !== null && lng !== null) {
+    if (effectiveLat !== null && effectiveLng !== null) {
       return results
         .map((r) => {
           const dist =
             realDistances[r.id] !== undefined
               ? realDistances[r.id]
-              : getDistance(lat, lng, r.lat, r.lng);
+              : getDistance(effectiveLat, effectiveLng, r.lat, r.lng);
           return { ...r, calculatedDistance: dist };
         })
         .sort((a, b) => a.calculatedDistance - b.calculatedDistance);
     }
 
     return results;
-  }, [initialRestaurants, moods, areas, priceRange, lat, lng, realDistances]);
+  }, [initialRestaurants, moods, areas, priceRange, effectiveLat, effectiveLng, realDistances]);
 
   const paginatedRestaurants = useMemo(() => {
     return filteredAndSorted.slice(0, visibleCount);

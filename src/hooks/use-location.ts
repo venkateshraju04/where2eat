@@ -16,6 +16,27 @@ export function useLocation() {
     error: null,
   });
 
+  // Load cached coordinates on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const cachedLat = localStorage.getItem("cached_lat");
+      const cachedLng = localStorage.getItem("cached_lng");
+      const timestamp = localStorage.getItem("cached_loc_timestamp");
+
+      if (cachedLat && cachedLng && timestamp) {
+        const ageMs = Date.now() - parseInt(timestamp);
+        if (ageMs < 15 * 60 * 1000) { // 15 minutes TTL
+          setState({
+            lat: parseFloat(cachedLat),
+            lng: parseFloat(cachedLng),
+            loading: false,
+            error: null,
+          });
+        }
+      }
+    }
+  }, []);
+
   const requestLocation = () => {
     setState((s) => ({ ...s, loading: true, error: null }));
     if (!("geolocation" in navigator)) {
@@ -25,12 +46,20 @@ export function useLocation() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const { latitude, longitude } = position.coords;
         setState({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
+          lat: latitude,
+          lng: longitude,
           loading: false,
           error: null,
         });
+
+        // Save to cache
+        if (typeof window !== "undefined") {
+          localStorage.setItem("cached_lat", latitude.toString());
+          localStorage.setItem("cached_lng", longitude.toString());
+          localStorage.setItem("cached_loc_timestamp", Date.now().toString());
+        }
       },
       (error) => {
         setState((s) => ({

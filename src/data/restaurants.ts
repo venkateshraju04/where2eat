@@ -51,6 +51,16 @@ export const AREAS: Area[] = [
   "JP Nagar",
 ];
 
+export const AREA_CENTERS: Record<Area, { lat: number; lng: number }> = {
+  Koramangala: { lat: 12.9352, lng: 77.6244 },
+  Indiranagar: { lat: 12.9719, lng: 77.6412 },
+  "HSR Layout": { lat: 12.9141, lng: 77.6411 },
+  "MG Road": { lat: 12.9733, lng: 77.6078 },
+  Jayanagar: { lat: 12.9250, lng: 77.5938 },
+  Whitefield: { lat: 12.9698, lng: 77.7499 },
+  "JP Nagar": { lat: 12.9105, lng: 77.5857 },
+};
+
 export const PRICE_MIN = 100;
 export const PRICE_MAX = 2000;
 
