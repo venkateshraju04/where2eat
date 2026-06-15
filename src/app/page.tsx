@@ -19,11 +19,15 @@ export default function Home() {
 
   const { lat, lng, loading: locLoading, error: locError, requestLocation } = useLocation();
   const [realDistances, setRealDistances] = useState<Record<string, number>>({});
+  const [visibleCount, setVisibleCount] = useState(12);
 
-  // Fetch restaurants and request location on mount
+  // Reset pagination when filters or location change
   useEffect(() => {
-    requestLocation();
+    setVisibleCount(12);
+  }, [moods, areas, priceRange, lat, lng]);
 
+  // Fetch restaurants on mount
+  useEffect(() => {
     fetch("/api/restaurants")
       .then((res) => res.json())
       .then((data) => setInitialRestaurants(data))
@@ -85,6 +89,11 @@ export default function Home() {
     return results;
   }, [initialRestaurants, moods, areas, priceRange, lat, lng, realDistances]);
 
+  const paginatedRestaurants = useMemo(() => {
+    return filteredAndSorted.slice(0, visibleCount);
+  }, [filteredAndSorted, visibleCount]);
+
+
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar onPick={() => setPickerOpen(true)} />
@@ -145,11 +154,18 @@ export default function Home() {
               matching filters
             </p>
           </div>
-          <div className="flex flex-col items-start sm:items-end gap-1 text-xs text-muted-foreground">
-            {locLoading && <span className="animate-pulse">📍 Locating...</span>}
-            {locError && <span className="text-destructive">📍 {locError}</span>}
-            {lat !== null && lng !== null && <span className="text-primary font-medium">📍 Sorted by nearest</span>}
-          </div>
+          {lat === null && (
+            <div className="flex flex-col items-start sm:items-end gap-1">
+              <button
+                onClick={requestLocation}
+                disabled={locLoading}
+                className="text-sm font-semibold text-primary hover:text-primary/80 transition-smooth disabled:opacity-50"
+              >
+                {locLoading ? "Locating..." : "📍 Sort by distance"}
+              </button>
+              {locError && <span className="text-xs text-destructive">{locError}</span>}
+            </div>
+          )}
         </div>
 
         <div className="mb-8">
@@ -182,16 +198,28 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredAndSorted.map((r, i) => (
-              <RestaurantCard
-                key={r.id}
-                r={r as Restaurant}
-                distance={(r as any).calculatedDistance}
-                index={i}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {paginatedRestaurants.map((r, i) => (
+                <RestaurantCard
+                  key={r.id}
+                  r={r as Restaurant}
+                  distance={(r as any).calculatedDistance}
+                  index={i}
+                />
+              ))}
+            </div>
+            {filteredAndSorted.length > visibleCount && (
+              <div className="mt-12 flex justify-center">
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 12)}
+                  className="rounded-full border border-border bg-card/50 px-8 py-3.5 text-sm font-semibold text-muted-foreground transition-smooth hover:border-primary hover:text-foreground hover:scale-105"
+                >
+                  Load More Spots
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
 

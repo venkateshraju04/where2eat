@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { SEED_RESTAURANTS, type Restaurant } from "@/data/restaurants";
 
+export const revalidate = 3600; // Cache at the Edge for 1 hour
+
 export async function GET() {
   const { data, error } = await supabase
     .from("restaurants")

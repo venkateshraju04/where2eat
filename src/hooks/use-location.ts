@@ -89,31 +89,50 @@ export async function getRealDistances(
       return distanceCache.distances;
     }
 
-    // OSRM expects: {lng},{lat}
-    const coords = [`${originLng},${originLat}`];
-    restaurants.forEach((r) => coords.push(`${r.lng},${r.lat}`));
+    // 1. Calculate Haversine distance for ALL restaurants as default fallback
+    const haversineList = restaurants.map((r) => ({
+      id: r.id,
+      lat: r.lat,
+      lng: r.lng,
+      havDist: getDistance(originLat, originLng, r.lat, r.lng),
+    }));
 
-    // Construct URL with sources=0 (only compute from origin to destinations)
-    // and annotations=distance (we want distance in meters, not duration)
-    const url = `https://router.project-osrm.org/table/v1/driving/${coords.join(";")}?sources=0&annotations=distance`;
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("OSRM API failed");
-
-    const data = await res.json();
-    if (!data.distances || !data.distances[0]) throw new Error("Invalid OSRM response");
-
+    // Create a base map with all Haversine distances
     const distanceMap: Record<string, number> = {};
-    const distances = data.distances[0]; // array of distances from source to each coord (including self)
-
-    // distances[0] is source to source (0)
-    // distances[1] is source to r1
-    restaurants.forEach((r, i) => {
-      const distMeters = distances[i + 1];
-      if (typeof distMeters === "number") {
-        distanceMap[r.id] = distMeters / 1000; // Convert to km
-      }
+    haversineList.forEach((item) => {
+      distanceMap[item.id] = item.havDist;
     });
+
+    // 2. Sort by Haversine distance and slice the top 20
+    const sortedHavList = [...haversineList].sort((a, b) => a.havDist - b.havDist);
+    const top20 = sortedHavList.slice(0, 20);
+
+    // 3. Query OSRM ONLY for the top 20 closest to prevent coordinate/payload size failures
+    if (top20.length > 0) {
+      // OSRM expects: {lng},{lat}
+      const coords = [`${originLng},${originLat}`];
+      top20.forEach((item) => coords.push(`${item.lng},${item.lat}`));
+
+      // Construct URL with sources=0 (only compute from origin to destinations)
+      // and annotations=distance (we want distance in meters, not duration)
+      const url = `https://router.project-osrm.org/table/v1/driving/${coords.join(";")}?sources=0&annotations=distance`;
+
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.distances && data.distances[0]) {
+          const distances = data.distances[0]; // array of distances from source to each coord (including self)
+          top20.forEach((item, i) => {
+            const distMeters = distances[i + 1];
+            if (typeof distMeters === "number") {
+              distanceMap[item.id] = distMeters / 1000; // Overwrite with real driving distance (km)
+            }
+          });
+        }
+      } else {
+        console.warn("OSRM Table API failed, using Haversine distances as fallback");
+      }
+    }
 
     // Save to cache
     distanceCache = {
@@ -124,7 +143,12 @@ export async function getRealDistances(
 
     return distanceMap;
   } catch (err) {
-    console.error("Failed to fetch real distances, falling back to Haversine", err);
-    return {};
+    console.error("Failed to fetch real distances, falling back entirely to Haversine", err);
+    // Ultimate fallback
+    const fallbackMap: Record<string, number> = {};
+    restaurants.forEach((r) => {
+      fallbackMap[r.id] = getDistance(originLat, originLng, r.lat, r.lng);
+    });
+    return fallbackMap;
   }
 }
