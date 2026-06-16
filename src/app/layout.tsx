@@ -3,12 +3,12 @@ import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Where2Eat BLR — Hidden Food Gems Nearby",
+  title: "Where2Eat — Hidden Food Gems Nearby",
   description:
     "Discover Bangalore's best hand-picked local food spots and hidden gems. Still undecided? Let our wheel pick for you!",
-  authors: [{ name: "Where2Eat BLR" }],
+  authors: [{ name: "Where2Eat" }],
   openGraph: {
-    title: "Where2Eat BLR — Hidden Food Gems Nearby",
+    title: "Where2Eat — Hidden Food Gems Nearby",
     description: "Discover Bangalore's best hand-picked local food spots and hidden gems.",
     type: "website",
   },

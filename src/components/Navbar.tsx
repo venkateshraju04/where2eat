@@ -7,7 +7,7 @@ export function Navbar({ onPick }: { onPick?: () => void }) {
     <header className="sticky top-0 z-40 glass">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-lg font-bold tracking-tight">Where2Eat BLR</span>
+          <span className="text-lg font-bold tracking-tight">Where2Eat</span>
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2">
           <Link

@@ -65,7 +65,7 @@ export default function SuggestPage() {
             </div>
             <h2 className="text-2xl font-bold">Thanks for the suggestion!</h2>
             <p className="mt-2 text-muted-foreground">
-              We&apos;ll review it and add it to Where2Eat BLR soon.
+              We&apos;ll review it and add it to Where2Eat soon.
             </p>
             <button
               onClick={() => {
