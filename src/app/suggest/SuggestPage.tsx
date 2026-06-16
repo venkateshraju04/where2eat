@@ -91,7 +91,7 @@ export default function SuggestPage() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Suggest a Spot</h1>
               <p className="mt-2 text-muted-foreground">
-                Know a good food spot in Bangalore? Help us grow the list!
+                Know a great food spot in Bangalore? Help us grow the list!
               </p>
             </div>
 
