@@ -3,13 +3,13 @@ import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SpinBite — Can't decide where to eat?",
+  title: "Where2Eat BLR — Hidden Food Gems Nearby",
   description:
-    "Spin and discover your next food spot. A playful random picker for nearby restaurants and cafes.",
-  authors: [{ name: "SpinBite" }],
+    "Discover Bangalore's best hand-picked local food spots and hidden gems. Still undecided? Let our wheel pick for you!",
+  authors: [{ name: "Where2Eat BLR" }],
   openGraph: {
-    title: "SpinBite — Can't decide where to eat?",
-    description: "Spin and discover your next food spot.",
+    title: "Where2Eat BLR — Hidden Food Gems Nearby",
+    description: "Discover Bangalore's best hand-picked local food spots and hidden gems.",
     type: "website",
   },
   twitter: {

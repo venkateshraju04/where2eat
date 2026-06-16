@@ -124,9 +124,9 @@ export default function Home() {
             transition={{ duration: 0.7, delay: 0.05 }}
             className="text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl"
           >
-            Can&apos;t decide
+            Find hidden food gems
             <br />
-            <span className="gradient-text">where to eat?</span>
+            <span className="gradient-text">nearby in Bangalore</span>
           </motion.h1>
 
           <motion.p
@@ -135,7 +135,7 @@ export default function Home() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mx-auto mt-5 max-w-lg text-base text-muted-foreground sm:text-lg"
           >
-            Spin and discover your next food spot in Bangalore.
+            Discover hand-picked local spots. Still undecided? Spin the wheel to decide!
           </motion.p>
 
           <motion.div
@@ -144,18 +144,18 @@ export default function Home() {
             transition={{ duration: 0.7, delay: 0.25 }}
             className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
           >
-            <button
-              onClick={() => setPickerOpen(true)}
-              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-glow transition-smooth hover:scale-105 animate-pulse-glow"
-            >
-              Pick For Me
-            </button>
             <a
               href="#explore"
+              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-glow transition-smooth hover:scale-105 animate-pulse-glow"
+            >
+              Explore Nearby Spots <ArrowDown className="h-4 w-4" />
+            </a>
+            <button
+              onClick={() => setPickerOpen(true)}
               className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-6 py-4 text-sm font-medium text-muted-foreground transition-smooth hover:text-foreground"
             >
-              Browse spots <ArrowDown className="h-4 w-4" />
-            </a>
+              🎡 Spin to Decide
+            </button>
           </motion.div>
         </div>
       </section>
