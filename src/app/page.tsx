@@ -124,7 +124,7 @@ export default function Home() {
             transition={{ duration: 0.7, delay: 0.05 }}
             className="text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl"
           >
-            Find hidden food gems
+            Find the best food spots
             <br />
             <span className="gradient-text">nearby in Bangalore</span>
           </motion.h1>

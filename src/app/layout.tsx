@@ -4,14 +4,14 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://where2eat-blr.vercel.app"),
-  title: "Where2Eat — Find Bangalore's Best Hidden Food Gems & Cafes",
+  title: "Where2Eat — Find Bangalore's Best Food Spots & Cafes",
   description:
-    "Discover hand-picked local food spots, unique cafes, and hidden restaurants nearby in Bangalore. Still undecided? Let our wheel pick for you!",
+    "Discover hand-picked local food spots, unique cafes, and popular restaurants nearby in Bangalore. Still undecided? Let our wheel pick for you!",
   authors: [{ name: "Where2Eat" }],
   keywords: [
     "Bangalore restaurants",
     "Bangalore cafes",
-    "hidden food gems Bangalore",
+    "best food spots Bangalore",
     "where to eat Bangalore",
     "nearby restaurants",
     "food spots Bangalore",
@@ -23,18 +23,18 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Where2Eat — Find Bangalore's Best Hidden Food Gems & Cafes",
+    title: "Where2Eat — Find Bangalore's Best Food Spots & Cafes",
     description:
-      "Discover hand-picked local food spots, unique cafes, and hidden restaurants nearby in Bangalore.",
+      "Discover hand-picked local food spots, unique cafes, and popular restaurants nearby in Bangalore.",
     type: "website",
     siteName: "Where2Eat",
     locale: "en_IN",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Where2Eat — Find Bangalore's Best Hidden Food Gems & Cafes",
+    title: "Where2Eat — Find Bangalore's Best Food Spots & Cafes",
     description:
-      "Discover hand-picked local food spots, unique cafes, and hidden restaurants nearby in Bangalore.",
+      "Discover hand-picked local food spots, unique cafes, and popular restaurants nearby in Bangalore.",
   },
 };
 
